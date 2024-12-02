@@ -9,48 +9,72 @@ readFile(filename, 'utf-8', function (err, data) {
 
     const lines = data.split('\n').map((line) => line.split(' ').map((level) => parseInt(level)))
 
+    // Patie 1
     let totalSafeReport = 0
 
     for (let report of lines) {
-        let previousLevel = null
-        let isIncreasing = null
-        let isReportSafe = true
+        const isReportSafe = checkReportSafety(report)
 
-        for (let currentLevel of report) {
-            // Si c'est le premier level on ne fais pas les tests
-            if (!previousLevel) {
-                previousLevel = currentLevel
-                continue
-            }
+        if (isReportSafe) totalSafeReport++
+    }
 
-            const difference = currentLevel - previousLevel
-            if (difference === 0) {
-                isReportSafe = false
-                break
-            }
+    console.log('Total valid reports (Part 1) : ', totalSafeReport)
 
-            // Set la direction générale en fonction des 2 premiers levels
-            if (isIncreasing === null) {
-                isIncreasing = difference > 0
-            } else {
-                // Fait les tests pour savoir si c'est toujours increasing / decreasing
-                if ((isIncreasing && difference < 1) || (!isIncreasing && difference >= 0)) {
-                    isReportSafe = false
+    // Partie 2
+    totalSafeReport = 0
+
+    for (let report of lines) {
+        if (checkReportSafety(report)) {
+            totalSafeReport++
+        } else {
+            let reportIsSafeAfterRemoval = false
+            for (let i = 0; i < report.length; i++) {
+                const modifiedReport = [...report.slice(0, i), ...report.slice(i + 1)]
+                if (checkReportSafety(modifiedReport)) {
+                    reportIsSafeAfterRemoval = true
                     break
                 }
             }
 
-            // Test l'écarts entre les 2 level
-            const absoluteDifference = Math.abs(difference)
-            if (absoluteDifference < 1 || absoluteDifference > 3) {
+            if (reportIsSafeAfterRemoval) {
+                totalSafeReport++
+            }
+        }
+    }
+
+    console.log('Total valid reports (Part 2) : ', totalSafeReport)
+})
+
+function checkReportSafety(report) {
+    let previousLevel = null
+    let isIncreasing = null
+    let isReportSafe = true
+
+    for (let currentLevel of report) {
+        if (!previousLevel) {
+            previousLevel = currentLevel
+            continue
+        }
+
+        const difference = currentLevel - previousLevel
+
+        if (isIncreasing === null) {
+            isIncreasing = difference > 0
+        } else {
+            if ((isIncreasing && difference < 1) || (!isIncreasing && difference >= 0)) {
                 isReportSafe = false
                 break
             }
-
-            previousLevel = currentLevel
         }
-        if (isReportSafe) totalSafeReport++
+
+        const absoluteDifference = Math.abs(difference)
+        if (absoluteDifference < 1 || absoluteDifference > 3) {
+            isReportSafe = false
+            break
+        }
+
+        previousLevel = currentLevel
     }
 
-    console.log('Total valid reports : ', totalSafeReport)
-})
+    return isReportSafe
+}
