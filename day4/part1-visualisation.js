@@ -3,13 +3,13 @@ let crossword = []
 const speed = 1
 const directions = {
     right: { line: 0, column: 1 },
-    left: { line: 0, column: -1 },
-    up: { line: -1, column: 0 },
-    down: { line: 1, column: 0 },
     rightDown: { line: 1, column: 1 },
-    rightUp: { line: -1, column: 1 },
+    down: { line: 1, column: 0 },
     leftDown: { line: 1, column: -1 },
+    left: { line: 0, column: -1 },
     leftUp: { line: -1, column: -1 },
+    up: { line: -1, column: 0 },
+    rightUp: { line: -1, column: 1 },
 }
 
 // Function to render the crossword grid in the HTML table
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
 })
 
-document.addEventListener('click', async function (event) {
+document.getElementById('start-button').addEventListener('click', async function (event) {
     const search = document.getElementById('search-input').value
 
     let resultCount = 0
@@ -115,6 +115,9 @@ async function checkDirection(search, crossword, line, column, direction) {
 
         // Si le caractère ne correspond pas, la recherche échoue
         if (crossword[newLine][newColumn] !== search[i]) {
+            cells.forEach((cell) => {
+                cell.classList.remove('checked')
+            })
             return false
         }
     }
