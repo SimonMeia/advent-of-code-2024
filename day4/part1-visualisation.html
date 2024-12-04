@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Visualisation du Mot Croisé</title>
+        <style>
+            table {
+                border-collapse: collapse;
+                margin: 20px auto;
+            }
+            td {
+                text-align: center;
+                border: 1px solid #ccc;
+            }
+            td.valid {
+                background-color: lightgreen;
+            }
+            td.checked {
+                background-color: lightblue;
+            }
+            td.selected {
+                background-color: deepskyblue;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Grille de Mots Croisés</h1>
+        <input type="text" id="search-input" value="XMAS" />
+        <button id="start-button">Start</button>
+        <br />
+        <br />
+        <div>Nombre d'occurence : <span id="result-count">0</span></div>
+        <table id="crossword-grid"></table>
+        <script src="part1-visualisation.js"></script>
+    </body>
+</html>
