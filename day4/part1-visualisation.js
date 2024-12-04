@@ -52,16 +52,16 @@ document.addEventListener('click', async function (event) {
         for (let column = 0; column < crossword[line].length; column++) {
             document.getElementById(`cell-${line}-${column}`).classList.add('selected')
             await wait(speed)
+
             if (crossword[line][column] === search[0]) {
                 const initialCount = resultCount
-                if (await checkRight(search, crossword, line, column)) resultCount++
-                if (await checkRightDown(search, crossword, line, column)) resultCount++
-                if (await checkDown(search, crossword, line, column)) resultCount++
-                if (await checkLeftDown(search, crossword, line, column)) resultCount++
-                if (await checkLeft(search, crossword, line, column)) resultCount++
-                if (await checkLeftUp(search, crossword, line, column)) resultCount++
-                if (await checkUp(search, crossword, line, column)) resultCount++
-                if (await checkRightUp(search, crossword, line, column)) resultCount++
+
+                // Vérifie toutes les directions possibles
+                for (const direction in directions) {
+                    if (await checkDirection(search, crossword, line, column, direction)) {
+                        resultCount++
+                    }
+                }
 
                 if (resultCount > initialCount) {
                     document.querySelector('.selected').classList.add('valid')
@@ -72,14 +72,37 @@ document.addEventListener('click', async function (event) {
                     cell.classList.remove('checked')
                 })
             }
+
             document.getElementById(`cell-${line}-${column}`).classList.remove('selected')
         }
     }
 })
 
+function hasEnoughSpace(search, crossword, line, column, dir) {
+    const endLine = line + dir.line * (search.length - 1)
+    const endColumn = column + dir.column * (search.length - 1)
+
+    // Vérifie que les indices restent dans les limites du tableau
+    if (
+        endLine < 0 ||
+        endLine >= crossword.length ||
+        endColumn < 0 ||
+        endColumn >= crossword[line].length
+    ) {
+        return false
+    }
+
+    return true
+}
+
 async function checkDirection(search, crossword, line, column, direction) {
     const dir = directions[direction]
     const cells = []
+
+    // Vérifie si l'espace est suffisant dans la direction donnée
+    if (!hasEnoughSpace(search, crossword, line, column, dir)) {
+        return false
+    }
 
     // Vérifie chaque cellule dans la direction donnée
     for (let i = 0; i < search.length; i++) {
@@ -92,7 +115,6 @@ async function checkDirection(search, crossword, line, column, direction) {
 
         // Si le caractère ne correspond pas, la recherche échoue
         if (crossword[newLine][newColumn] !== search[i]) {
-            cells.forEach((cell) => cell.classList.remove('checked'))
             return false
         }
     }
@@ -104,81 +126,6 @@ async function checkDirection(search, crossword, line, column, direction) {
     })
 
     return true
-}
-
-async function checkRight(search, crossword, line, column) {
-    if (enoughSpaceRight(search, crossword, line, column)) {
-        return checkDirection(search, crossword, line, column, 'right')
-    }
-    return false
-}
-
-async function checkLeft(search, crossword, line, column) {
-    if (enoughSpaceLeft(search, column)) {
-        return checkDirection(search, crossword, line, column, 'left')
-    }
-    return false
-}
-
-async function checkUp(search, crossword, line, column) {
-    if (enoughSpaceUp(search, line)) {
-        return checkDirection(search, crossword, line, column, 'up')
-    }
-    return false
-}
-
-async function checkDown(search, crossword, line, column) {
-    if (enoughSpaceDown(search, crossword, line)) {
-        return checkDirection(search, crossword, line, column, 'down')
-    }
-    return false
-}
-
-async function checkRightDown(search, crossword, line, column) {
-    if (
-        enoughSpaceRight(search, crossword, line, column) &&
-        enoughSpaceDown(search, crossword, line)
-    ) {
-        return checkDirection(search, crossword, line, column, 'rightDown')
-    }
-    return false
-}
-
-async function checkRightUp(search, crossword, line, column) {
-    if (enoughSpaceRight(search, crossword, line, column) && enoughSpaceUp(search, line)) {
-        return checkDirection(search, crossword, line, column, 'rightUp')
-    }
-    return false
-}
-
-async function checkLeftUp(search, crossword, line, column) {
-    if (enoughSpaceLeft(search, column) && enoughSpaceUp(search, line)) {
-        return checkDirection(search, crossword, line, column, 'leftUp')
-    }
-    return false
-}
-
-async function checkLeftDown(search, crossword, line, column) {
-    if (enoughSpaceLeft(search, column) && enoughSpaceDown(search, crossword, line)) {
-        return checkDirection(search, crossword, line, column, 'leftDown')
-    }
-    return false
-}
-
-function enoughSpaceDown(search, crossword, line) {
-    return line + search.length - 1 < crossword.length
-}
-
-function enoughSpaceLeft(search, column) {
-    return column - search.length + 1 >= 0
-}
-
-function enoughSpaceUp(search, line) {
-    return line - search.length + 1 >= 0
-}
-
-function enoughSpaceRight(search, crossword, line, column) {
-    return column + search.length - 1 < crossword[line].length
 }
 
 function wait(ms) {
