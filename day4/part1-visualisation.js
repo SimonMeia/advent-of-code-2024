@@ -1,6 +1,16 @@
 const filename = './data.txt'
 let crossword = []
 const speed = 1
+const directions = {
+    right: { line: 0, column: 1 },
+    left: { line: 0, column: -1 },
+    up: { line: -1, column: 0 },
+    down: { line: 1, column: 0 },
+    rightDown: { line: 1, column: 1 },
+    rightUp: { line: -1, column: 1 },
+    leftDown: { line: 1, column: -1 },
+    leftUp: { line: -1, column: -1 },
+}
 
 // Function to render the crossword grid in the HTML table
 function renderCrossword(crossword) {
@@ -67,78 +77,59 @@ document.addEventListener('click', async function (event) {
     }
 })
 
+async function checkDirection(search, crossword, line, column, direction) {
+    const dir = directions[direction]
+    const cells = []
+
+    // Vérifie chaque cellule dans la direction donnée
+    for (let i = 0; i < search.length; i++) {
+        const newLine = line + dir.line * i
+        const newColumn = column + dir.column * i
+        const cell = document.getElementById(`cell-${newLine}-${newColumn}`)
+        cell.classList.add('checked')
+        cells.push(cell)
+        await wait(speed)
+
+        // Si le caractère ne correspond pas, la recherche échoue
+        if (crossword[newLine][newColumn] !== search[i]) {
+            cells.forEach((cell) => cell.classList.remove('checked'))
+            return false
+        }
+    }
+
+    // Si on a trouvé le mot, marque toutes les cellules comme valides
+    cells.forEach((cell) => {
+        cell.classList.remove('checked')
+        cell.classList.add('valid')
+    })
+
+    return true
+}
+
 async function checkRight(search, crossword, line, column) {
     if (enoughSpaceRight(search, crossword, line, column)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line}-${column + i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line][column + i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'right')
     }
     return false
 }
 
 async function checkLeft(search, crossword, line, column) {
     if (enoughSpaceLeft(search, column)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line}-${column - i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line][column - i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'left')
     }
     return false
 }
 
 async function checkUp(search, crossword, line, column) {
     if (enoughSpaceUp(search, line)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line - i}-${column}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line - i][column] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'up')
     }
     return false
 }
 
 async function checkDown(search, crossword, line, column) {
     if (enoughSpaceDown(search, crossword, line)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line + i}-${column}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line + i][column] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'down')
     }
     return false
 }
@@ -148,76 +139,28 @@ async function checkRightDown(search, crossword, line, column) {
         enoughSpaceRight(search, crossword, line, column) &&
         enoughSpaceDown(search, crossword, line)
     ) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line + i}-${column + i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line + i][column + i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'rightDown')
     }
     return false
 }
 
 async function checkRightUp(search, crossword, line, column) {
     if (enoughSpaceRight(search, crossword, line, column) && enoughSpaceUp(search, line)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line - i}-${column + i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line - i][column + i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'rightUp')
     }
     return false
 }
 
 async function checkLeftUp(search, crossword, line, column) {
     if (enoughSpaceLeft(search, column) && enoughSpaceUp(search, line)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line - i}-${column - i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line - i][column - i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'leftUp')
     }
     return false
 }
 
 async function checkLeftDown(search, crossword, line, column) {
     if (enoughSpaceLeft(search, column) && enoughSpaceDown(search, crossword, line)) {
-        const cells = []
-        for (let i = 1; i < search.length; i++) {
-            const cell = document.getElementById(`cell-${line + i}-${column - i}`)
-            cell.classList.add('checked')
-            cells.push(cell)
-            await wait(speed)
-            if (crossword[line + i][column - i] !== search[i]) return false
-        }
-        cells.forEach((cell) => {
-            cell.classList.remove('checked')
-            cell.classList.add('valid')
-        })
-        return true
+        return checkDirection(search, crossword, line, column, 'leftDown')
     }
     return false
 }
