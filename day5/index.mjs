@@ -14,8 +14,8 @@ readFile(filename, 'utf-8', function (err, data) {
         .map((line) => line.split('|'))
 
     for (let rule of rules) {
-        if (!formatedRules[rule[1]]) formatedRules[rule[1]] = { mustBeAfter: new Set() }
-        formatedRules[rule[1]]['mustBeAfter'].add(parseInt(rule[0]))
+        if (!formatedRules[rule[1]]) formatedRules[rule[1]] = { nextPages: new Set() }
+        formatedRules[rule[1]]['nextPages'].add(parseInt(rule[0]))
     }
 
     const updates = data
@@ -46,7 +46,7 @@ function isUpdateValid(update) {
     for (let page of update) {
         for (let previousPage of beforeCurrentPage) {
             // On test si une page devant se trouver après la page courante est avant la page courante
-            if (!formatedRules[page]['mustBeAfter'].has(previousPage)) {
+            if (!formatedRules[page]['nextPages'].has(previousPage)) {
                 return false
             }
         }
@@ -75,7 +75,7 @@ function correctUpdate(update) {
             // On test si une page devant se trouver après la page courante est avant la page courante
             for (let previousPage of beforeCurrentPage) {
                 // Si une page est mal positionnée
-                if (!formatedRules[page]['mustBeAfter'].has(previousPage)) {
+                if (!formatedRules[page]['nextPages'].has(previousPage)) {
                     // On la déplace un cran en arriere
                     correctedUpdate = moveElementInArray(correctedUpdate, i, i - 1)
                     changesMade = true
