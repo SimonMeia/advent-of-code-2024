@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Guard Visualization</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+                background-color: #f0f0f0;
+                margin: 0;
+                padding: 0;
+            }
+            .map {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, 20px);
+                justify-content: center;
+                gap: 2px;
+                margin: 20px auto;
+                background-color: #ffffff;
+                padding: 10px;
+                border: 2px solid #ccc;
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+            .cell {
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: bold;
+                color: #000;
+                border: 1px solid #ddd;
+                background-color: #fff;
+            }
+            .cell.wall {
+                background-color: #333;
+            }
+            .cell.visited {
+                background-color: #6fcf97;
+            }
+            .cell.guard {
+                background-color: #2d9cdb;
+                color: #fff;
+            }
+            .controls {
+                margin-top: 20px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                border: none;
+                border-radius: 4px;
+                background-color: #2d9cdb;
+                color: white;
+                cursor: pointer;
+            }
+            button:hover {
+                background-color: #247ba0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Guard Movement Visualization</h1>
+        <div class="map" id="map"></div>
+        <div class="controls">
+            <button id="start">Start Simulation</button>
+        </div>
+        <p>Total distinct positions visited: <span id="distinct">0</span></p>
+
+        <script>
+            async function fetchData() {
+                const response = await fetch('./data.txt')
+                if (!response.ok) {
+                    throw new Error('Could not load data.txt')
+                }
+                return await response.text()
+            }
+
+            let guardPosition = {}
+            let map = []
+            let distinctPositions = 0
+            let isRunning = false
+
+            function renderMap() {
+                const mapContainer = document.getElementById('map')
+                mapContainer.innerHTML = ''
+                mapContainer.style.gridTemplateColumns = `repeat(${map[0].length}, 20px)`
+                map.forEach((line, lineIndex) => {
+                    line.forEach((cell, cellIndex) => {
+                        const cellElement = document.createElement('div')
+                        cellElement.classList.add('cell')
+                        if (cell === '#') {
+                            cellElement.classList.add('wall')
+                        } else if (cell === 'X') {
+                            cellElement.classList.add('visited')
+                        }
+                        if (guardPosition.line === lineIndex && guardPosition.row === cellIndex) {
+                            cellElement.classList.add('guard')
+                            cellElement.textContent = getGuardSymbol()
+                        }
+                        mapContainer.appendChild(cellElement)
+                    })
+                })
+            }
+
+            function getGuardSymbol() {
+                if (guardPosition.facing === 'top') return '↑'
+                if (guardPosition.facing === 'right') return '→'
+                if (guardPosition.facing === 'bottom') return '↓'
+                if (guardPosition.facing === 'left') return '←'
+            }
+
+            function move() {
+                if (!isRunning) return
+
+                if (guardPosition.facing === 'top') {
+                    if (map[guardPosition.line - 1][guardPosition.row] === '#') {
+                        guardPosition.facing = 'right'
+                    } else {
+                        guardPosition.line--
+                        visit()
+                    }
+                } else if (guardPosition.facing === 'right') {
+                    if (map[guardPosition.line][guardPosition.row + 1] === '#') {
+                        guardPosition.facing = 'bottom'
+                    } else {
+                        guardPosition.row++
+                        visit()
+                    }
+                } else if (guardPosition.facing === 'bottom') {
+                    if (map[guardPosition.line + 1][guardPosition.row] === '#') {
+                        guardPosition.facing = 'left'
+                    } else {
+                        guardPosition.line++
+                        visit()
+                    }
+                } else if (guardPosition.facing === 'left') {
+                    if (map[guardPosition.line][guardPosition.row - 1] === '#') {
+                        guardPosition.facing = 'top'
+                    } else {
+                        guardPosition.row--
+                        visit()
+                    }
+                }
+
+                renderMap()
+                setTimeout(move, 100)
+            }
+
+            function visit() {
+                if (map[guardPosition.line][guardPosition.row] !== 'X') {
+                    map[guardPosition.line][guardPosition.row] = 'X'
+                    distinctPositions++
+                    document.getElementById('distinct').innerText = distinctPositions
+                }
+            }
+
+            document.getElementById('start').addEventListener('click', async () => {
+                if (isRunning) return
+
+                isRunning = true
+                distinctPositions = 0
+
+                try {
+                    const data = await fetchData()
+                    map = data.split('\n').map((line) => line.split(''))
+
+                    map.forEach((line, lineIndex) => {
+                        if (line.includes('^')) {
+                            guardPosition = {
+                                line: lineIndex,
+                                row: line.indexOf('^'),
+                                facing: 'top',
+                            }
+                        }
+                    })
+
+                    renderMap()
+                    move()
+                } catch (error) {
+                    console.error(error.message)
+                    alert('Failed to load map data.')
+                }
+            })
+        </script>
+    </body>
+</html>
